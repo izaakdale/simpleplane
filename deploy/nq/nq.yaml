@@ -1,0 +1,7 @@
+apiVersion: "aws.com/v1"
+kind: NotificationQueue
+metadata:
+  name: new-notiqueue
+spec:
+  name: izaak
+  region: eu-west-2
