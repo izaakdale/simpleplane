@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/izaakdale/simpleplane/internal/notification"
 	"github.com/kelseyhightower/envconfig"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -30,6 +31,7 @@ type NQObject struct {
 }
 
 func main() {
+	// notification.NewAndDelete()
 	ctx := context.Background()
 
 	var spec Specification
@@ -77,6 +79,8 @@ func AddResourceHandler(obj any) {
 	log.Printf("Hit add\n")
 	nqo := unstructuredToNQ(obj)
 	log.Printf("%+v\n", nqo.Spec.Name)
+
+	notification.New()
 }
 func UpdateResourceHandler(oldObj, newObj any) {
 	log.Printf("Hit update\n")
@@ -85,17 +89,19 @@ func DeleteResourceHandler(obj any) {
 	log.Printf("Hit delete\n")
 	nqo := unstructuredToNQ(obj)
 	log.Printf("%+v\n", nqo.Spec.Name)
+
+	notification.Delete()
 }
 
-func unstructuredToNQ(obj any) (nqo *NQObject) {
+func unstructuredToNQ(obj any) *NQObject {
 	nq, ok := obj.(*unstructured.Unstructured)
 	if !ok {
 		log.Printf("error in formatting of object\n")
 	}
-
-	err := runtime.DefaultUnstructuredConverter.FromUnstructured(nq.Object, nqo)
+	var nqo NQObject
+	err := runtime.DefaultUnstructuredConverter.FromUnstructured(nq.Object, &nqo)
 	if err != nil {
 		log.Printf("error converting from unstructured to NQObject: %v\n", err)
 	}
-	return
+	return &nqo
 }
