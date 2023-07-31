@@ -1,0 +1,7 @@
+apiVersion: "aws.com/v1"
+kind: Notification
+metadata:
+  name: sns-topic
+spec:
+  name: new-test-topic
+  region: eu-west-2

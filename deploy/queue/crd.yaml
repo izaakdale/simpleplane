@@ -21,8 +21,8 @@ spec:
                   type: string
   scope: Namespaced
   names:
-    plural: notifications
-    singular: notification
-    kind: Notification
+    plural: queues
+    singular: queue
+    kind: Queue
     shortNames:
-      - nf
+      - qu

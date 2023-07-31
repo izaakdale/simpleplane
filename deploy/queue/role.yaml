@@ -1,12 +1,12 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: notification-manager
+  name: queue-manager
 rules:
 - apiGroups:
   - aws.com
   resources:
-  - notifications
+  - queues
   verbs:
   - get
   - list

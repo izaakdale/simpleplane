@@ -22,7 +22,7 @@ spec:
             - name: VERSION
               value: "v1"
             - name: RESOURCE
-              value: "notificationqueues"
+              value: "notifications"
           resources:
             requests:
               memory: "64Mi"

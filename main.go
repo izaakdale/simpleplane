@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 
 	"github.com/izaakdale/simpleplane/internal/notification"
@@ -23,15 +22,7 @@ type Specification struct {
 	Resource string `envconfig:"RESOURCE"`
 }
 
-type NQObject struct {
-	Spec struct {
-		Name   string `json:"name,omitempty"`
-		Region string `json:"region,omitempty"`
-	} `json:"spec,omitempty"`
-}
-
 func main() {
-	// notification.NewAndDelete()
 	ctx := context.Background()
 
 	var spec Specification
@@ -49,7 +40,7 @@ func main() {
 	}
 	dynCli := dynamic.NewForConfigOrDie(config)
 
-	notificationQueueInformer := cache.NewSharedIndexInformer(&cache.ListWatch{
+	notificationInformer := cache.NewSharedIndexInformer(&cache.ListWatch{
 		ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 			return dynCli.Resource(gvr).List(ctx, v1.ListOptions{})
 		},
@@ -62,58 +53,58 @@ func main() {
 		cache.Indexers{},
 	)
 
-	notificationQueueInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    AddResourceHandler,
-		UpdateFunc: UpdateResourceHandler,
-		DeleteFunc: DeleteResourceHandler,
+	notificationInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    notification.AddResourceHandler,
+		UpdateFunc: notification.UpdateResourceHandler,
+		DeleteFunc: notification.DeleteResourceHandler,
 	})
 
 	stopCh := make(chan struct{})
-	notificationQueueInformer.Run(stopCh)
+	notificationInformer.Run(stopCh)
 	for range stopCh {
 		os.Exit(0)
 	}
 }
 
-func AddResourceHandler(obj any) {
-	log.Printf("Hit add\n")
+// func AddResourceHandler(obj any) {
+// 	log.Printf("Hit add\n")
 
-	nq, ok := obj.(*unstructured.Unstructured)
-	if !ok {
-		log.Printf("error in formatting of object\n")
-	}
+// 	nq, ok := obj.(*unstructured.Unstructured)
+// 	if !ok {
+// 		log.Printf("error in formatting of object\n")
+// 	}
 
-	var nqo NQObject
-	err := runtime.DefaultUnstructuredConverter.FromUnstructured(nq.Object, &nqo)
-	if err != nil {
-		log.Printf("error converting from unstructured to NQObject: %v\n", err)
-	}
+// 	var nqo NQObject
+// 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(nq.Object, &nqo)
+// 	if err != nil {
+// 		log.Printf("error converting from unstructured to NQObject: %v\n", err)
+// 	}
 
-	_ = notification.New()
-}
-func UpdateResourceHandler(oldObj, newObj any) {
-	log.Printf("Hit update\n")
-}
-func DeleteResourceHandler(obj any) {
-	log.Printf("Hit delete\n")
+// 	_ = notification.New(nqo.Spec.Name, nqo.Spec.Region)
+// }
+// func UpdateResourceHandler(oldObj, newObj any) {
+// 	log.Printf("Hit update\n")
+// }
+// func DeleteResourceHandler(obj any) {
+// 	log.Printf("Hit delete\n")
 
-	_ = unstructuredToNQ(obj)
+// 	_ = unstructuredToNQ(obj)
 
-	notification.Delete()
-}
+// 	notification.Delete()
+// }
 
-func unstructuredToNQ(obj any) *NQObject {
-	nq, ok := obj.(*unstructured.Unstructured)
-	if !ok {
-		log.Printf("error in formatting of object\n")
-	}
-	var nqo NQObject
+// func unstructuredToNQ(obj any) *NQObject {
+// 	nq, ok := obj.(*unstructured.Unstructured)
+// 	if !ok {
+// 		log.Printf("error in formatting of object\n")
+// 	}
+// 	var nqo NQObject
 
-	log.Printf("%+v\n", nq.Object)
+// 	log.Printf("%+v\n", nq.Object)
 
-	err := runtime.DefaultUnstructuredConverter.FromUnstructured(nq.Object, &nqo)
-	if err != nil {
-		log.Printf("error converting from unstructured to NQObject: %v\n", err)
-	}
-	return &nqo
-}
+// 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(nq.Object, &nqo)
+// 	if err != nil {
+// 		log.Printf("error converting from unstructured to NQObject: %v\n", err)
+// 	}
+// 	return &nqo
+// }
