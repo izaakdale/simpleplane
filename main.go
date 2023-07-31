@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"os"
 
 	"github.com/izaakdale/simpleplane/internal/notification"
@@ -17,9 +18,9 @@ import (
 )
 
 type Specification struct {
-	Group    string `envconfig:"GROUP"`
-	Version  string `envconfig:"VERSION"`
-	Resource string `envconfig:"RESOURCE"`
+	Group     string   `envconfig:"GROUP"`
+	Version   string   `envconfig:"VERSION"`
+	Resources []string `envconfig:"RESOURCE"`
 }
 
 func main() {
@@ -28,10 +29,12 @@ func main() {
 	var spec Specification
 	envconfig.MustProcess("", &spec)
 
+	log.Printf("%+v\n", spec.Resources)
+
 	gvr := schema.GroupVersionResource{
 		Group:    spec.Group,
 		Version:  spec.Version,
-		Resource: spec.Resource,
+		Resource: spec.Resources[0],
 	}
 
 	config, err := rest.InClusterConfig()
@@ -65,46 +68,3 @@ func main() {
 		os.Exit(0)
 	}
 }
-
-// func AddResourceHandler(obj any) {
-// 	log.Printf("Hit add\n")
-
-// 	nq, ok := obj.(*unstructured.Unstructured)
-// 	if !ok {
-// 		log.Printf("error in formatting of object\n")
-// 	}
-
-// 	var nqo NQObject
-// 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(nq.Object, &nqo)
-// 	if err != nil {
-// 		log.Printf("error converting from unstructured to NQObject: %v\n", err)
-// 	}
-
-// 	_ = notification.New(nqo.Spec.Name, nqo.Spec.Region)
-// }
-// func UpdateResourceHandler(oldObj, newObj any) {
-// 	log.Printf("Hit update\n")
-// }
-// func DeleteResourceHandler(obj any) {
-// 	log.Printf("Hit delete\n")
-
-// 	_ = unstructuredToNQ(obj)
-
-// 	notification.Delete()
-// }
-
-// func unstructuredToNQ(obj any) *NQObject {
-// 	nq, ok := obj.(*unstructured.Unstructured)
-// 	if !ok {
-// 		log.Printf("error in formatting of object\n")
-// 	}
-// 	var nqo NQObject
-
-// 	log.Printf("%+v\n", nq.Object)
-
-// 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(nq.Object, &nqo)
-// 	if err != nil {
-// 		log.Printf("error converting from unstructured to NQObject: %v\n", err)
-// 	}
-// 	return &nqo
-// }

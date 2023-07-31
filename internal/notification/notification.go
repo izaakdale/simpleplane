@@ -17,6 +17,7 @@ type SNSTopicAPI interface {
 	CreateTopic(context.Context, *sns.CreateTopicInput, ...func(*sns.Options)) (*sns.CreateTopicOutput, error)
 	DeleteTopic(context.Context, *sns.DeleteTopicInput, ...func(*sns.Options)) (*sns.DeleteTopicOutput, error)
 	ListTopics(context.Context, *sns.ListTopicsInput, ...func(*sns.Options)) (*sns.ListTopicsOutput, error)
+	Subscribe(context.Context, *sns.SubscribeInput, ...func(*sns.Options)) (*sns.SubscribeOutput, error)
 }
 
 func MakeTopic(c context.Context, api SNSTopicAPI, input *sns.CreateTopicInput) (*sns.CreateTopicOutput, error) {
