@@ -77,18 +77,27 @@ func main() {
 
 func AddResourceHandler(obj any) {
 	log.Printf("Hit add\n")
-	nqo := unstructuredToNQ(obj)
-	log.Printf("%+v\n", nqo.Spec.Name)
 
-	notification.New()
+	nq, ok := obj.(*unstructured.Unstructured)
+	if !ok {
+		log.Printf("error in formatting of object\n")
+	}
+
+	var nqo NQObject
+	err := runtime.DefaultUnstructuredConverter.FromUnstructured(nq.Object, &nqo)
+	if err != nil {
+		log.Printf("error converting from unstructured to NQObject: %v\n", err)
+	}
+
+	_ = notification.New()
 }
 func UpdateResourceHandler(oldObj, newObj any) {
 	log.Printf("Hit update\n")
 }
 func DeleteResourceHandler(obj any) {
 	log.Printf("Hit delete\n")
-	nqo := unstructuredToNQ(obj)
-	log.Printf("%+v\n", nqo.Spec.Name)
+
+	_ = unstructuredToNQ(obj)
 
 	notification.Delete()
 }
@@ -99,6 +108,9 @@ func unstructuredToNQ(obj any) *NQObject {
 		log.Printf("error in formatting of object\n")
 	}
 	var nqo NQObject
+
+	log.Printf("%+v\n", nq.Object)
+
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(nq.Object, &nqo)
 	if err != nil {
 		log.Printf("error converting from unstructured to NQObject: %v\n", err)
