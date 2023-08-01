@@ -2,10 +2,9 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 
-	"github.com/izaakdale/simpleplane/internal/notification"
+	"github.com/izaakdale/simpleplane/internal/bucket"
 	"github.com/kelseyhightower/envconfig"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -18,9 +17,9 @@ import (
 )
 
 type Specification struct {
-	Group     string   `envconfig:"GROUP"`
-	Version   string   `envconfig:"VERSION"`
-	Resources []string `envconfig:"RESOURCE"`
+	Group    string `envconfig:"GROUP"`
+	Version  string `envconfig:"VERSION"`
+	Resource string `envconfig:"RESOURCE"`
 }
 
 func main() {
@@ -29,12 +28,10 @@ func main() {
 	var spec Specification
 	envconfig.MustProcess("", &spec)
 
-	log.Printf("%+v\n", spec.Resources)
-
 	gvr := schema.GroupVersionResource{
 		Group:    spec.Group,
 		Version:  spec.Version,
-		Resource: spec.Resources[0],
+		Resource: spec.Resource,
 	}
 
 	config, err := rest.InClusterConfig()
@@ -43,7 +40,7 @@ func main() {
 	}
 	dynCli := dynamic.NewForConfigOrDie(config)
 
-	notificationInformer := cache.NewSharedIndexInformer(&cache.ListWatch{
+	bucketInformer := cache.NewSharedIndexInformer(&cache.ListWatch{
 		ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 			return dynCli.Resource(gvr).List(ctx, v1.ListOptions{})
 		},
@@ -56,14 +53,20 @@ func main() {
 		cache.Indexers{},
 	)
 
-	notificationInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    notification.AddResourceHandler,
-		UpdateFunc: notification.UpdateResourceHandler,
-		DeleteFunc: notification.DeleteResourceHandler,
+	// hard coding since i am going to create roles etc for aws
+	s3cli, err := bucket.NewClient(ctx, "eu-west-2")
+	if err != nil {
+		panic(err)
+	}
+
+	bucketInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    s3cli.AddResourceHandler,
+		UpdateFunc: s3cli.UpdateResourceHandler,
+		DeleteFunc: s3cli.DeleteResourceHandler,
 	})
 
 	stopCh := make(chan struct{})
-	notificationInformer.Run(stopCh)
+	bucketInformer.Run(stopCh)
 	for range stopCh {
 		os.Exit(0)
 	}

@@ -1,7 +1,7 @@
 apiVersion: "aws.com/v1"
-kind: Notification
+kind: Bucket
 metadata:
-  name: sqs-queue
+  name: s3-bucket
 spec:
   name: izaak
   region: eu-west-2
